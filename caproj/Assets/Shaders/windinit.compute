@@ -1,0 +1,30 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+#include "UnityCG.cginc"
+CBUFFER_START(Params)
+int width;
+int height;
+int depth;
+CBUFFER_END
+RWTexture3D<float4> Back;
+RWTexture3D<float4> Wind;
+
+[numthreads(8, 8, 8)]
+void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 threadid : SV_GroupThreadID)
+{
+    // TODO: insert actual code here!
+    int3 coord = id.xyz;
+    float4 vel = Wind.Load(coord);
+    if(id.z<8)
+    {
+        Wind[id.xyz] = float4(0.0, 0.0, 1.0, 1.0);
+    }
+    else
+    {
+        Wind[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
+    }
+    Back[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
+
+}

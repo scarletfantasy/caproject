@@ -1,0 +1,61 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+#include "UnityCG.cginc"
+#define FLOATSIZE (1<<8)
+CBUFFER_START(Params)
+int width;
+int height;
+int depth;
+float m_dt;
+CBUFFER_END
+RWTexture3D<float4> Result;
+RWTexture3D<float4> Wind;
+RWBuffer<int> WindBuffer;
+
+void myatomicadd(int3 coord,float3 val)
+{
+    int off = (coord.x * width * height + coord.y * width + coord.z)*3;
+    
+    InterlockedAdd(WindBuffer[off], (int) (val.x * FLOATSIZE));
+    InterlockedAdd(WindBuffer[off + 1], (int) (val.y * FLOATSIZE));
+    InterlockedAdd(WindBuffer[off + 2], (int) (val.z * FLOATSIZE));
+    //InterlockedAdd(WindBuffer[off], 0);
+    //InterlockedAdd(WindBuffer[off + 1], 1);
+    //InterlockedAdd(WindBuffer[off + 2], 2);
+
+}
+[numthreads(8, 8, 8)]
+void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 threadid : SV_GroupThreadID)
+{
+    // TODO: insert actual code here!
+    int3 coord = id.xyz;
+    float4 vel = Wind.Load(coord);
+    float3 ncoord = coord + vel.xyz * m_dt;
+    int3 minc = int3(floor(ncoord.x), floor(ncoord.y), floor(ncoord.z));
+    float wx = ncoord.x - minc.x;
+    float wy = ncoord.y - minc.y;
+    float wz = ncoord.z - minc.z;
+
+    for (int i = 0; i <= 1; ++i)
+    {
+        for (int j = 0; j <= 1; ++j)
+        {
+            for (int k = 0; k <= 1; ++k)
+            {
+                //Result[minc + int3(i, j, k)] = Result[minc + int3(i, j, k)] + ((1 - wx) * (1 - i) + (wx) * i) * ((1 - wy) * (1 - j) + wy * j) * ((1 - wz) * (1 - k) + wz * k) * vel;
+                myatomicadd(minc + int3(i, j, k), ((1 - wx) * (1 - i) + (wx) * i) * ((1 - wy) * (1 - j) + wy * j) * ((1 - wz) * (1 - k) + wz * k) * vel.xyz);
+
+            }
+
+        }
+
+    }
+    //myatomicadd(coord, vel.xyz);
+    
+
+    
+    
+
+}
