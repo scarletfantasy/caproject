@@ -14,7 +14,7 @@ RWTexture3D<float4> Result;
 RWBuffer<int> buffer;
 float getval(int3 coord,int off)
 {
-    float res= clamp(((float) (buffer[(coord.x * width * height + coord.y * width + coord.z) * 3 + off])) / FLOATSIZE,0.0,1.0);
+    float res= ((float) (buffer[(coord.x * width * height + coord.y * width + coord.z) * 3 + off])) / FLOATSIZE;
     buffer[(coord.x * width * height + coord.y * width + coord.z) * 3 + off] = 0;
     return res;
 

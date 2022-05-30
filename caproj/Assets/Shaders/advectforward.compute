@@ -44,8 +44,12 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
         {
             for (int k = 0; k <= 1; ++k)
             {
-                //Result[minc + int3(i, j, k)] = Result[minc + int3(i, j, k)] + ((1 - wx) * (1 - i) + (wx) * i) * ((1 - wy) * (1 - j) + wy * j) * ((1 - wz) * (1 - k) + wz * k) * vel;
-                myatomicadd(minc + int3(i, j, k), ((1 - wx) * (1 - i) + (wx) * i) * ((1 - wy) * (1 - j) + wy * j) * ((1 - wz) * (1 - k) + wz * k) * vel.xyz);
+                int3 nc = minc + int3(i, j, k);
+                if (step(nc.x, width - 1) && step(nc.y, height - 1) && step(nc.z, depth - 1) && step(0, nc.x) && step(0, nc.y) && step(0, nc.z))
+                {
+                    myatomicadd(minc + int3(i, j, k), ((1 - wx) * (1 - i) + (wx) * i) * ((1 - wy) * (1 - j) + wy * j) * ((1 - wz) * (1 - k) + wz * k) * vel.xyz);
+                }
+                    
 
             }
 

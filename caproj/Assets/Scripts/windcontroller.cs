@@ -103,7 +103,7 @@ public class WindController : MonoBehaviour
 
             kernel = advectforward.FindKernel("CSMain");
             advectforward.Dispatch(kernel, 2, 2, 2);
-            //windbuffer.GetData(tmp);
+            windbuffer.GetData(tmp);
             kernel = buffertotex.FindKernel("CSMain");
             buffertotex.Dispatch(kernel, 2, 2, 2);
             
@@ -119,7 +119,7 @@ public class WindController : MonoBehaviour
     private void OnDrawGizmos()
     {
         
-        if(wind)
+        if(tmp.Length>0)
         {
             var colors = wind.GetPixels();
             for (var i = 0; i < wind.depth; ++i)
@@ -129,11 +129,12 @@ public class WindController : MonoBehaviour
                     for (var k = 0; k < wind.width; ++k)
                     {
                         var originpos = new Vector3(((float)i / wind.depth - 0.5f) * size.z, ((float)j / wind.height - 0.5f) * size.y, ((float)k / wind.width - 0.5f) * size.x);
-                        var color = colors[i * wind.height * wind.width + j * wind.width + k];
-                        //Gizmos.DrawLine(originpos, originpos + new Vector3(color.r, color.g, color.b));
-                        Gizmos.color = new Color(1.0f, 0.0f, 0.0f);
-                        var ray = new Ray(originpos, new Vector3(color.r, color.g, color.b));
-                        Gizmos.DrawRay(ray);
+                        int off = (i * wind.width * wind.height + j * wind.width + k)*3;
+
+                                     
+
+                        Gizmos.DrawLine(originpos, originpos + new Vector3((float)tmp[off]/256.0f, (float)tmp[off+1] / 256.0f, (float)tmp[off+2] / 256.0f));
+                        
                     }
                 }
             }
