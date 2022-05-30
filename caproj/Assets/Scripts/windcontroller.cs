@@ -15,7 +15,7 @@ public class WindController : MonoBehaviour
     public ComputeShader windinit;
     public ComputeShader advectforward;
     public ComputeShader buffertotex;
-    public Material mat;
+    public Material[] mats;
     public Camera camera;
     public bool step;
     public int[] tmp;
@@ -107,7 +107,11 @@ public class WindController : MonoBehaviour
             kernel = buffertotex.FindKernel("CSMain");
             buffertotex.Dispatch(kernel, 2, 2, 2);
             
-            mat.SetTexture("_MyTex", windrt);
+            foreach(var mat in mats)
+            {
+                mat.SetTexture("_MyTex", windrt);
+                mat.SetVector("_size", new Vector4(size.x,size.y,size.z, 0.0f));
+            }
             step = false;
         }
 
@@ -128,11 +132,8 @@ public class WindController : MonoBehaviour
                 {
                     for (var k = 0; k < wind.width; ++k)
                     {
-                        var originpos = new Vector3(((float)i / wind.depth - 0.5f) * size.z, ((float)j / wind.height - 0.5f) * size.y, ((float)k / wind.width - 0.5f) * size.x);
+                        var originpos = new Vector3(((float)i / wind.depth ) * size.z, ((float)j / wind.height ) * size.y, ((float)k / wind.width ) * size.x);
                         int off = (i * wind.width * wind.height + j * wind.width + k)*3;
-
-                                     
-
                         Gizmos.DrawLine(originpos, originpos + new Vector3((float)tmp[off]/256.0f, (float)tmp[off+1] / 256.0f, (float)tmp[off+2] / 256.0f));
                         
                     }
