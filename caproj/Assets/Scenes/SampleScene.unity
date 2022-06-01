@@ -404,11 +404,14 @@ MonoBehaviour:
   wind: {fileID: 11700000, guid: 23650abc36ee8c841bc6a18b64b06f46, type: 2}
   windrt: {fileID: 8400000, guid: eee50ced66efc1c4da471bdb9db132c4, type: 2}
   backrt: {fileID: 0}
-  size: {x: 8, y: 8, z: 8}
+  windrtix: {fileID: 0}
+  windrtiy: {fileID: 0}
+  windrtiz: {fileID: 0}
+  size: {x: 16, y: 16, z: 16}
   diffusion: {fileID: 7200000, guid: a5f6e44fb6690644e8bc1f0b93e51d0e, type: 3}
   windinit: {fileID: 7200000, guid: 21b8937c98e03d34381ca0a63b59ddb7, type: 3}
-  advectforward: {fileID: 7200000, guid: 117504194ca5b914497958469e1774f1, type: 3}
-  buffertotex: {fileID: 7200000, guid: 676554bc93952c54ca75a77a7faeac1e, type: 3}
+  advectforward: {fileID: 7200000, guid: 66f3374a315dc624f8fe880e544de302, type: 3}
+  buffertotex: {fileID: 7200000, guid: 885f1cbee991f8c4d8dcb0dafef31655, type: 3}
   mats:
   - {fileID: 2100000, guid: e0b1bf5c948406d4e82be1892f894482, type: 2}
   - {fileID: 2100000, guid: adb8626884dcaa5419dd102da3679b20, type: 2}

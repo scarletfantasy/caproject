@@ -10,7 +10,9 @@ int depth;
 CBUFFER_END
 RWTexture3D<float4> Back;
 RWTexture3D<float4> Wind;
-
+RWTexture3D<int> Windix;
+RWTexture3D<int> Windiy;
+RWTexture3D<int> Windiz;
 [numthreads(8, 8, 8)]
 void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 threadid : SV_GroupThreadID)
 {
@@ -26,5 +28,8 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
         Wind[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
     }
     Back[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
+    Windix[id.xyz] = 0;
+    Windiy[id.xyz] = 0;
+    Windiz[id.xyz] = 0;
 
 }
