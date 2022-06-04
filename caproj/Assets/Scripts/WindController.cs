@@ -18,9 +18,16 @@ public class WindController : MonoBehaviour
     public ComputeShader windinit;
     public ComputeShader advectforward;
     public ComputeShader buffertotex;
+    public ComputeShader texitotex;
+    public ComputeShader textobuffer;
+    public ComputeShader advectbackward;
+    public ComputeShader windgen;
     public Material[] mats;
     public Camera camera;
     public bool step;
+    public bool enablestep;
+    public float m_dt;
+    public bool enabledebug;
     public int[] tmp;
     private void OnButtonClicked()
     {
@@ -103,6 +110,9 @@ public class WindController : MonoBehaviour
         //buffertotex.SetInt("depth", 16);
         //buffertotex.SetFloat("m_dt", 1.0f);
 
+        kernel = windgen.FindKernel("CSMain");
+        windgen.SetTexture(kernel, "Wind", windrt);
+
         kernel = advectforward.FindKernel("CSMain");
         advectforward.SetTexture(kernel, "Wind", windrt);
         advectforward.SetTexture(kernel, "Result", backrt);
@@ -112,17 +122,34 @@ public class WindController : MonoBehaviour
         advectforward.SetInt("width", 16);
         advectforward.SetInt("height", 16);
         advectforward.SetInt("depth", 16);
-        advectforward.SetFloat("m_dt", 1.0f);
+        advectforward.SetFloat("m_dt", m_dt);
 
-        kernel = buffertotex.FindKernel("CSMain");
-        buffertotex.SetTexture(kernel, "Wind", windrt);
-        buffertotex.SetTexture(kernel, "Windix", windrtix);
-        buffertotex.SetTexture(kernel, "Windiy", windrtiy);
-        buffertotex.SetTexture(kernel, "Windiz", windrtiz);
-        buffertotex.SetInt("width", 16);
-        buffertotex.SetInt("height", 16);
-        buffertotex.SetInt("depth", 16);
-        buffertotex.SetFloat("m_dt", 1.0f);
+        kernel = advectbackward.FindKernel("CSMain");
+        advectbackward.SetTexture(kernel, "Wind", windrt);
+        advectbackward.SetInt("width", 16);
+        advectbackward.SetInt("height", 16);
+        advectbackward.SetInt("depth", 16);
+        advectbackward.SetFloat("m_dt", m_dt);
+
+        kernel = texitotex.FindKernel("CSMain");
+        texitotex.SetTexture(kernel, "Wind", windrt);
+        texitotex.SetTexture(kernel, "Windix", windrtix);
+        texitotex.SetTexture(kernel, "Windiy", windrtiy);
+        texitotex.SetTexture(kernel, "Windiz", windrtiz);
+        texitotex.SetInt("width", 16);
+        texitotex.SetInt("height", 16);
+        texitotex.SetInt("depth", 16);
+        texitotex.SetFloat("m_dt", m_dt);
+
+        kernel = textobuffer.FindKernel("CSMain");
+        textobuffer.SetTexture(kernel, "src", windrt);
+        textobuffer.SetBuffer(kernel, "dst", windbuffer);
+        textobuffer.SetInt("width", 16);
+        textobuffer.SetInt("height", 16);
+        textobuffer.SetInt("depth", 16);
+        textobuffer.SetFloat("m_dt", m_dt);
+
+
 
 
     }
@@ -132,24 +159,53 @@ public class WindController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void FixedUpdate()
     {
-
-        //if(step)
+        if (!enablestep|| step)
         {
-            
-            int kernel = diffusion.FindKernel("CSMain");
+
+            int kernel = windgen.FindKernel("CSMain");
+            windgen.Dispatch(kernel, 2, 2, 2);
+
+            kernel = diffusion.FindKernel("CSMain");
             diffusion.Dispatch(kernel, 2, 2, 2);
 
             kernel = advectforward.FindKernel("CSMain");
             advectforward.Dispatch(kernel, 2, 2, 2);
-            //windbuffer.GetData(tmp);
-            kernel = buffertotex.FindKernel("CSMain");
-            buffertotex.Dispatch(kernel, 2, 2, 2);
-            
-            
+
+            kernel = texitotex.FindKernel("CSMain");
+            texitotex.Dispatch(kernel, 2, 2, 2);
+
+            kernel = textobuffer.FindKernel("CSMain");
+            textobuffer.Dispatch(kernel,2, 2, 2);
+
+            kernel = advectbackward.FindKernel("CSMain");
+            //advectbackward.Dispatch(kernel, 2, 2, 2);
+
+            windbuffer.GetData(tmp);
+
+
             step = false;
         }
+    }
+    void Update()
+    {
+
+        //if(step)
+        //{
+            
+        //    int kernel = diffusion.FindKernel("CSMain");
+        //    diffusion.Dispatch(kernel, 2, 2, 2);
+
+        //    kernel = advectforward.FindKernel("CSMain");
+        //    advectforward.Dispatch(kernel, 2, 2, 2);
+        //    //windbuffer.GetData(tmp);
+        //    kernel = buffertotex.FindKernel("CSMain");
+        //    buffertotex.Dispatch(kernel, 2, 2, 2);
+            
+            
+        //    step = false;
+        //}
 
         
     }
@@ -158,7 +214,7 @@ public class WindController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        
+        float floatsize = (float)(1 << 16);
         if(tmp.Length>0)
         {
             var colors = wind.GetPixels();
@@ -170,7 +226,9 @@ public class WindController : MonoBehaviour
                     {
                         var originpos = new Vector3(((float)i / wind.depth ) * size.z, ((float)j / wind.height ) * size.y, ((float)k / wind.width ) * size.x);
                         int off = (i * wind.width * wind.height + j * wind.width + k)*3;
-                        Gizmos.DrawLine(originpos, originpos + new Vector3((float)tmp[off]/256.0f, (float)tmp[off+1] / 256.0f, (float)tmp[off+2] / 256.0f));
+                        Vector3 vel = new Vector3((float)tmp[off] / floatsize, (float)tmp[off + 1] / floatsize, (float)tmp[off + 2] / floatsize);
+                        Gizmos.color = new Color(vel.x,vel.y,vel.z);
+                        Gizmos.DrawLine(originpos, originpos + vel);
                         
                     }
                 }

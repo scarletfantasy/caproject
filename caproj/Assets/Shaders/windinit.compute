@@ -19,7 +19,7 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
     // TODO: insert actual code here!
     int3 coord = id.xyz;
     float4 vel = Wind.Load(coord);
-    if(id.x<8)
+    if(id.x<4 )
     {
         Wind[id.xyz] = float4(1.0, 0.0, 0.0, 1.0);
     }

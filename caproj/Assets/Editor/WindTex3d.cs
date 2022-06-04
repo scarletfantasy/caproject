@@ -43,4 +43,20 @@ public class WindTex3D : MonoBehaviour
         // Save the texture to your Unity Project
         AssetDatabase.CreateAsset(texture, "Assets/Example3DTexture.asset");
     }
+
+    [MenuItem("CreateExamples/trees")]
+    static void createtrees()
+    {
+        var obj = AssetDatabase.LoadAssetAtPath("Assets/Resources/my.fbx", typeof(GameObject));
+        int n = 8;
+        int off = 2;
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = 0; j < n; ++j)
+            {
+                Instantiate(obj, new Vector3(i * off, 0, j * off), Quaternion.identity);
+            }
+        }
+        Instantiate(obj);
+    }
 }

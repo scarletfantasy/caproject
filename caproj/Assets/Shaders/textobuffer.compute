@@ -1,0 +1,25 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+#include "UnityCG.cginc"
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+#define FLOATSIZE (1<<16)
+CBUFFER_START(Params)
+int width;
+int height;
+int depth;
+float m_dt;
+CBUFFER_END
+RWTexture3D<float4> src;
+RWBuffer<int> dst;
+
+[numthreads(8, 8, 8)]
+void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 threadid : SV_GroupThreadID)
+{
+
+    
+    dst[(id.x * width * height + id.y * width + id.z) * 3 ] = (int) (src[id.xyz].x * FLOATSIZE);
+    dst[(id.x * width * height + id.y * width + id.z) * 3 + 1] = (int) (src[id.xyz].y * FLOATSIZE);
+    dst[(id.x * width * height + id.y * width + id.z) * 3 + 2] = (int) (src[id.xyz].z * FLOATSIZE);
+
+}

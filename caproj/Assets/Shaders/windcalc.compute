@@ -16,8 +16,10 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
 {
     // TODO: insert actual code here!
     int3 coord = id.xyz;
-	float4 vel = Wind.Load(coord);
+    float w = 0.05;
+    float4 vel = Wind.Load(coord) * (1.0 - w * 6);
 	float tmp = (id.z) / 16.0;
+
 	
     int3 off[6];
     off[0] = int3(1, 0, 0);
@@ -29,9 +31,9 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
     for (int i = 0; i < 6;++i)
     {
         int3 ncoord = clamp(off[i] + coord, int3(0, 0, 0), int3(15, 15, 15));
-        vel += Wind.Load(ncoord);
+        vel += Wind.Load(ncoord)*w;
     }
-    vel = vel / 7.0;
+    
     Wind[int3(coord.x, coord.y, coord.z)] = vel;
 
 }

@@ -8,6 +8,7 @@ public class MyCustomEditor : Editor
 {
 	
 	private WindGen script;
+	
 	private void OnEnable()
 	{
 		// Method 1
@@ -53,5 +54,6 @@ public class MyCustomEditor : Editor
 
 			AssetDatabase.CreateAsset(tex3d, "Assets/windrt.asset");
 		}
+		
 	}
 }
