@@ -18,16 +18,11 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
 {
     // TODO: insert actual code here!
     int3 coord = id.xyz;
-    float4 vel = Wind.Load(coord);
-    if(id.x<4 )
-    {
-        Wind[id.xyz] = float4(1.0, 0.0, 0.0, 1.0);
-    }
-    else
-    {
-        Wind[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
-    }
+    
+    
+    
     Back[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
+    Wind[id.xyz] = float4(0.0, 0.0, 0.0, 1.0);
     Windix[id.xyz] = 0;
     Windiy[id.xyz] = 0;
     Windiz[id.xyz] = 0;

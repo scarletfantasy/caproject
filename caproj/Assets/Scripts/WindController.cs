@@ -4,8 +4,10 @@ using UnityEngine;
 using UnityEditor;
 public class WindController : MonoBehaviour
 {
-    
+
     // Start is called before the first frame update
+    public float stiffness=1.0f;
+
     public Texture3D wind;
     public RenderTexture windrt;
     public ComputeBuffer windbuffer;
@@ -26,6 +28,8 @@ public class WindController : MonoBehaviour
     public Camera camera;
     public bool step;
     public bool enablestep;
+    public bool genonce;
+    private bool gen;
     public float m_dt;
     public bool enabledebug;
     public int[] tmp;
@@ -46,7 +50,7 @@ public class WindController : MonoBehaviour
     void initcompute()
     {
         
-
+        
         step = false;
         windrt = creatert3d((int)size.x, (int)size.y, (int)size.z, RenderTextureFormat.ARGBFloat);
         
@@ -57,11 +61,7 @@ public class WindController : MonoBehaviour
         windrtiy = creatert3d((int)size.x, (int)size.y, (int)size.z, RenderTextureFormat.RInt);
 
         windrtiz = creatert3d((int)size.x, (int)size.y, (int)size.z, RenderTextureFormat.RInt);
-        foreach (var mat in mats)
-        {
-            mat.SetTexture("_MyTex", windrt);
-            mat.SetVector("_size", new Vector4(size.x, size.y, size.z, 0.0f));
-        }
+        
 
         windbuffer = new ComputeBuffer(16 * 16 * 16*3, 4);
         tmp = new int[16*16*16*3];
@@ -112,6 +112,7 @@ public class WindController : MonoBehaviour
 
         kernel = windgen.FindKernel("CSMain");
         windgen.SetTexture(kernel, "Wind", windrt);
+        
 
         kernel = advectforward.FindKernel("CSMain");
         advectforward.SetTexture(kernel, "Wind", windrt);
@@ -156,19 +157,51 @@ public class WindController : MonoBehaviour
     void Start()
     {
         initcompute();
+        gen = true;
     }
 
     // Update is called once per frame
     private void FixedUpdate()
     {
+        foreach (var mat in mats)
+        {
+            mat.SetTexture("_MyTex", windrt);
+            mat.SetVector("_size", new Vector4(size.x, size.y, size.z, 0.0f));
+            mat.SetFloat("_stiffness", stiffness);
+        }
         if (!enablestep|| step)
         {
-
             int kernel = windgen.FindKernel("CSMain");
-            windgen.Dispatch(kernel, 2, 2, 2);
+            windgen.SetFloat("time", Time.time);
+            Debug.Log(Time.time);
+            if (genonce )
+            {
+                if(gen)
+                {
+
+                    windgen.Dispatch(kernel, 2, 2, 2);
+                    gen = false;
+                }
+            }
+            else
+            {
+
+                windgen.Dispatch(kernel, 2, 2, 2);
+                
+            }
+            
+            
+            
+
+
+            
+
 
             kernel = diffusion.FindKernel("CSMain");
-            diffusion.Dispatch(kernel, 2, 2, 2);
+            for (int i = 0; i < 3; ++i)
+            {
+                diffusion.Dispatch(kernel, 2, 2, 2);
+            }
 
             kernel = advectforward.FindKernel("CSMain");
             advectforward.Dispatch(kernel, 2, 2, 2);
@@ -177,10 +210,10 @@ public class WindController : MonoBehaviour
             texitotex.Dispatch(kernel, 2, 2, 2);
 
             kernel = textobuffer.FindKernel("CSMain");
-            textobuffer.Dispatch(kernel,2, 2, 2);
+            textobuffer.Dispatch(kernel, 2, 2, 2);
 
             kernel = advectbackward.FindKernel("CSMain");
-            //advectbackward.Dispatch(kernel, 2, 2, 2);
+            advectbackward.Dispatch(kernel, 2, 2, 2);
 
             windbuffer.GetData(tmp);
 
@@ -227,7 +260,7 @@ public class WindController : MonoBehaviour
                         var originpos = new Vector3(((float)i / wind.depth ) * size.z, ((float)j / wind.height ) * size.y, ((float)k / wind.width ) * size.x);
                         int off = (i * wind.width * wind.height + j * wind.width + k)*3;
                         Vector3 vel = new Vector3((float)tmp[off] / floatsize, (float)tmp[off + 1] / floatsize, (float)tmp[off + 2] / floatsize);
-                        Gizmos.color = new Color(vel.x,vel.y,vel.z);
+                        Gizmos.color = new Color(vel.magnitude, vel.magnitude, vel.magnitude);
                         Gizmos.DrawLine(originpos, originpos + vel);
                         
                     }
