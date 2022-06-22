@@ -5,6 +5,7 @@ Shader "tree/treemovingadvance"
         _MainTex("Texture", 2D) = "white" {}
         _MyTex("Volume",3D) = "white"{}
         _stiffness("stiffness",float)=1.0
+        _stretch("strech",float)=1.0
     }
         SubShader
     {
@@ -41,25 +42,28 @@ Shader "tree/treemovingadvance"
             sampler3D _MyTex;
             float4 _size;
             float _stiffness;
+            float _stretch;
             v2f vert(appdata v)
             {
                 v2f o;
                 float4 worldpos = mul(unity_ObjectToWorld,v.vertex);
+                float4 p= mul(unity_ObjectToWorld, float4(0,0,0,1));
                 o.uv = v.uv;
                 //worldpos = float4(worldpos.x + worldpos.y, worldpos.y, worldpos.z + worldpos.y, 1.0);
                 float3 vel = tex3Dlod(_MyTex, float4(worldpos.xyz / _size.xyz, 0.0)).xyz;
 
                 //height based move
-                worldpos = worldpos + worldpos.y*worldpos.y * float4(vel.x ,vel.y ,vel.z , 0.0) * 0.1;
-
+                float l = length(worldpos - p);
+                worldpos = worldpos + worldpos.y*worldpos.y * float4(vel.x ,vel.y ,vel.z , 0.0) * 0.1*_stretch;
+                worldpos = normalize(worldpos - p) * l+p;
                 
 
                 //leaf move
-                worldpos = worldpos + length(vel) * v.color.x * float4(vel.x, vel.y, vel.z, 0.0) * 0.03;
+                worldpos = worldpos + length(vel) * v.color.x * float4(vel.x, vel.y, vel.z, 0.0) * 0.03* _stretch;
                 worldpos = worldpos + sin(_Time.y * _stiffness + worldpos.x + worldpos.z) * v.color.x * float4(vel.z, 0, vel.x, 0.0)*0.01;
 
                 //branch move
-                worldpos = worldpos + v.color.y * v.color.y * float4(vel.x, vel.y, vel.z, 0.0) * 0.02;
+                worldpos = worldpos + v.color.y * v.color.y * float4(vel.x, vel.y, vel.z, 0.0) * 0.02*_stretch;
 
                 o.vertex = mul(unity_MatrixVP, worldpos);
                 //o.vertex= UnityObjectToClipPos(v.vertex);

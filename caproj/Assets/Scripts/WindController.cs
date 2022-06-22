@@ -7,6 +7,7 @@ public class WindController : MonoBehaviour
 
     // Start is called before the first frame update
     public float stiffness=1.0f;
+    public float stretch = 1.0f;
 
     public Texture3D wind;
     public RenderTexture windrt;
@@ -24,15 +25,18 @@ public class WindController : MonoBehaviour
     public ComputeShader textobuffer;
     public ComputeShader advectbackward;
     public ComputeShader windgen;
+    public ComputeShader obstacle;
     public Material[] mats;
     public Camera camera;
     public bool step;
     public bool enablestep;
     public bool genonce;
+    public float enableobstacle;
     private bool gen;
     public float m_dt;
     public bool enabledebug;
     public int[] tmp;
+    public int numtrees;
     private void OnButtonClicked()
     {
         Debug.Log("Clicked!");
@@ -150,8 +154,38 @@ public class WindController : MonoBehaviour
         textobuffer.SetInt("depth", 16);
         textobuffer.SetFloat("m_dt", m_dt);
 
+        numtrees = 64;
+        ComputeBuffer bbmin = new ComputeBuffer(numtrees, 16);
+        float[] bbmindata = new float[numtrees*4];
+        ComputeBuffer bbmax = new ComputeBuffer(numtrees, 16);
+        float[] bbmaxdata = new float[numtrees * 4];
+        for (int i=0;i<8;++i)
+        {
+            for(int j=0;j<8;++j)
+            {
 
+                bbmindata[(i * 8 + j)*4] = i*2-0.5f;
+                bbmindata[(i * 8 + j) * 4 + 1] = 1;
+                bbmindata[(i * 8 + j) * 4 + 2] = j * 2 - 0.5f;
+                bbmindata[(i * 8 + j) * 4 + 3] = 0;
+                bbmaxdata[(i * 8 + j) * 4] = i * 2+0.5f;
+                bbmaxdata[(i * 8 + j) * 4 + 1] = 3;
+                bbmaxdata[(i * 8 + j) * 4 + 2] = j * 2 + 0.5f;
+                bbmaxdata[(i * 8 + j) * 4 + 3] = 0;
 
+            }
+        }
+        bbmin.SetData(bbmindata);
+        bbmax.SetData(bbmaxdata);
+        kernel = obstacle.FindKernel("CSMain");
+        obstacle.SetTexture(kernel, "Wind", windrt);
+        obstacle.SetBuffer(kernel, "mincs", bbmin);
+        obstacle.SetBuffer(kernel, "maxcs", bbmax);
+        obstacle.SetInt("width", 16);
+        obstacle.SetInt("height", 16);
+        obstacle.SetInt("depth", 16);
+        obstacle.SetFloat("m_dt", m_dt);
+        obstacle.SetInt("n", numtrees);
 
     }
     void Start()
@@ -168,12 +202,13 @@ public class WindController : MonoBehaviour
             mat.SetTexture("_MyTex", windrt);
             mat.SetVector("_size", new Vector4(size.x, size.y, size.z, 0.0f));
             mat.SetFloat("_stiffness", stiffness);
+            mat.SetFloat("_stretch", stretch);
         }
         if (!enablestep|| step)
         {
             int kernel = windgen.FindKernel("CSMain");
             windgen.SetFloat("time", Time.time);
-            Debug.Log(Time.time);
+
             if (genonce )
             {
                 if(gen)
@@ -209,11 +244,16 @@ public class WindController : MonoBehaviour
             kernel = texitotex.FindKernel("CSMain");
             texitotex.Dispatch(kernel, 2, 2, 2);
 
-            kernel = textobuffer.FindKernel("CSMain");
-            textobuffer.Dispatch(kernel, 2, 2, 2);
+
 
             kernel = advectbackward.FindKernel("CSMain");
             advectbackward.Dispatch(kernel, 2, 2, 2);
+
+            kernel = obstacle.FindKernel("CSMain");
+            obstacle.Dispatch(kernel, 2, 2, 2);
+
+            kernel = textobuffer.FindKernel("CSMain");
+            textobuffer.Dispatch(kernel, 2, 2, 2);
 
             windbuffer.GetData(tmp);
 

@@ -9,54 +9,39 @@ int width;
 int height;
 int depth;
 float m_dt;
+int n;
 CBUFFER_END
-RWTexture3D<float4> Result;
 RWTexture3D<float4> Wind;
-RWBuffer<int> WindBuffer;
+RWBuffer<float4> mincs;
+RWBuffer<float4> maxcs;
 
-void myatomicadd(int3 coord, float3 val)
-{
-    int off = (coord.x * width * height + coord.y * width + coord.z) * 3;
-    
-    InterlockedAdd(WindBuffer[off], (int) (val.x * FLOATSIZE));
-    InterlockedAdd(WindBuffer[off + 1], (int) (val.y * FLOATSIZE));
-    InterlockedAdd(WindBuffer[off + 2], (int) (val.z * FLOATSIZE));
-    //InterlockedAdd(WindBuffer[off], 0);
-    //InterlockedAdd(WindBuffer[off + 1], 1);
-    //InterlockedAdd(WindBuffer[off + 2], 2);
 
-}
+
 [numthreads(8, 8, 8)]
 void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 threadid : SV_GroupThreadID)
 {
     // TODO: insert actual code here!
     int3 coord = id.xyz;
     float4 vel = Wind.Load(coord);
-    float3 ncoord = coord + vel.xyz * m_dt;
-    int3 minc = int3(floor(ncoord.x), floor(ncoord.y), floor(ncoord.z));
-    float wx = ncoord.x - minc.x;
-    float wy = ncoord.y - minc.y;
-    float wz = ncoord.z - minc.z;
-
-    for (int i = 0; i <= 1; ++i)
+    float3 sum = float3(0, 0, 0);
+    for (int i = 0; i < n;++i)
     {
-        for (int j = 0; j <= 1; ++j)
+        float4 mid = (mincs[i] + maxcs[i]) / 2.0;
+       
+        if (length(mid.xyz - float3(id.x, id.y , id.z )) < 0.5)
         {
-            for (int k = 0; k <= 1; ++k)
-            {
-                int3 nc = minc + int3(i, j, k);
-                if (step(nc.x, width - 1) && step(nc.y, height - 1) && step(nc.z, depth - 1) && step(0, nc.x) && step(0, nc.y) && step(0, nc.z))
-                {
-                    myatomicadd(minc + int3(i, j, k), ((1 - wx) * (1 - i) + (wx) * i) * ((1 - wy) * (1 - j) + wy * j) * ((1 - wz) * (1 - k) + wz * k) * vel.xyz);
-                }
-                    
-
-            }
-
+            float3 nmin = max(id.xyz, mincs[i]);
+            float3 nmax = min(float3(id.x+1,id.y+1,id.z+1), maxcs[i]);
+            float3 nv = nmax - nmin;
+            float v = nv.x * nv.y * nv.z;
+            sum += v;
+           // Wind[id.xyz] = float4(0, 0, 0, 1.0);
         }
+        
 
     }
-    //myatomicadd(coord, vel.xyz);
+
+    Wind[id.xyz] = float4(vel.xyz * (1 - sum * 0.5),1.0);
     
 
     
