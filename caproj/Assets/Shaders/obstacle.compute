@@ -41,7 +41,7 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
 
     }
 
-    Wind[id.xyz] = float4(vel.xyz * (1 - sum * 0.5),1.0);
+    Wind[id.xyz] = float4(vel.xyz * (1 - sum*0.5 ),1.0);
     
 
     

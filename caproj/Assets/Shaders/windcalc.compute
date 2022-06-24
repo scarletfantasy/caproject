@@ -33,7 +33,7 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupid : SV_GroupID, uint3 th
         int3 ncoord = clamp(off[i] + coord, int3(0, 0, 0), int3(15, 15, 15));
         vel += Wind.Load(ncoord)*w;
     }
-    
+    AllMemoryBarrierWithGroupSync();
     Wind[int3(coord.x, coord.y, coord.z)] = vel;
 
 }

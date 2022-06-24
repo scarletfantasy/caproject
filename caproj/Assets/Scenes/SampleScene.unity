@@ -2519,6 +2519,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stiffness: 10
+  stretch: 1
   wind: {fileID: 11700000, guid: 23650abc36ee8c841bc6a18b64b06f46, type: 2}
   windrt: {fileID: 8400000, guid: eee50ced66efc1c4da471bdb9db132c4, type: 2}
   backrt: {fileID: 0}
@@ -2534,6 +2535,8 @@ MonoBehaviour:
   textobuffer: {fileID: 7200000, guid: b64f4119f731c1c43b3ab90057aaccb2, type: 3}
   advectbackward: {fileID: 7200000, guid: fc678c60ca7670d47a1fe390825c824f, type: 3}
   windgen: {fileID: 7200000, guid: f0e98252cde8a724dafbeb01580b61f0, type: 3}
+  obstacle: {fileID: 7200000, guid: 380b586037a962c48a820101d161f064, type: 3}
+  applynoise: {fileID: 7200000, guid: 52f78dadb5ee08d4899aaaa5056d33cf, type: 3}
   mats:
   - {fileID: 2100000, guid: e0b1bf5c948406d4e82be1892f894482, type: 2}
   - {fileID: 2100000, guid: adb8626884dcaa5419dd102da3679b20, type: 2}
@@ -2544,12 +2547,15 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 819db2e46cd8a464ab60022321c06d99, type: 2}
   - {fileID: 2100000, guid: 900e9e5ad2a02ba4ba6f9ad5dc0f1464, type: 2}
   camera: {fileID: 963194227}
+  noise: {fileID: 2800000, guid: d7962c34ad8a5404fb81866508890eaa, type: 3}
   step: 0
   enablestep: 0
   genonce: 0
+  enableobstacle: 0
   m_dt: 0.1
   enabledebug: 0
   tmp: 
+  numtrees: 0
 --- !u!4 &166298017
 Transform:
   m_ObjectHideFlags: 0

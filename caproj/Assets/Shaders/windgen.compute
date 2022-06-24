@@ -14,7 +14,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // TODO: insert actual code here!
 
-    if (id.x <4)
+    if (id.x < 4)
     {
         Wind[id.xyz] = float4(1.0, 0.0, 0.0, 1.0);
     }

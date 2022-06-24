@@ -6,8 +6,8 @@ public class WindController : MonoBehaviour
 {
 
     // Start is called before the first frame update
-    public float stiffness=1.0f;
-    public float stretch = 1.0f;
+    [Range(1.0f, 50.0f)] public float stiffness=10.0f;
+    [Range(0.5f,5.0f)] public float stretch = 1.0f;
 
     public Texture3D wind;
     public RenderTexture windrt;
@@ -26,8 +26,10 @@ public class WindController : MonoBehaviour
     public ComputeShader advectbackward;
     public ComputeShader windgen;
     public ComputeShader obstacle;
+    public ComputeShader applynoise;
     public Material[] mats;
     public Camera camera;
+    public Texture noise;
     public bool step;
     public bool enablestep;
     public bool genonce;
@@ -187,6 +189,14 @@ public class WindController : MonoBehaviour
         obstacle.SetFloat("m_dt", m_dt);
         obstacle.SetInt("n", numtrees);
 
+        kernel = applynoise.FindKernel("CSMain");
+        applynoise.SetTexture(kernel, "Wind", windrt);
+        applynoise.SetTexture(kernel, "noise", noise);
+        applynoise.SetInt("width", 16);
+        applynoise.SetInt("height", 16);
+        applynoise.SetInt("depth", 16);
+        applynoise.SetFloat("m_dt", m_dt);
+
     }
     void Start()
     {
@@ -252,6 +262,9 @@ public class WindController : MonoBehaviour
             kernel = obstacle.FindKernel("CSMain");
             obstacle.Dispatch(kernel, 2, 2, 2);
 
+            kernel = applynoise.FindKernel("CSMain");
+            applynoise.Dispatch(kernel, 2, 2, 2);
+
             kernel = textobuffer.FindKernel("CSMain");
             textobuffer.Dispatch(kernel, 2, 2, 2);
 
@@ -297,11 +310,15 @@ public class WindController : MonoBehaviour
                 {
                     for (var k = 0; k < wind.width; ++k)
                     {
-                        var originpos = new Vector3(((float)i / wind.depth ) * size.z, ((float)j / wind.height ) * size.y, ((float)k / wind.width ) * size.x);
-                        int off = (i * wind.width * wind.height + j * wind.width + k)*3;
-                        Vector3 vel = new Vector3((float)tmp[off] / floatsize, (float)tmp[off + 1] / floatsize, (float)tmp[off + 2] / floatsize);
-                        Gizmos.color = new Color(vel.magnitude, vel.magnitude, vel.magnitude);
-                        Gizmos.DrawLine(originpos, originpos + vel);
+                        if(j<3)
+                        {
+                            var originpos = new Vector3(((float)i / wind.depth) * size.z, ((float)j / wind.height) * size.y, ((float)k / wind.width) * size.x);
+                            int off = (i * wind.width * wind.height + j * wind.width + k) * 3;
+                            Vector3 vel = new Vector3((float)tmp[off] / floatsize, (float)tmp[off + 1] / floatsize, (float)tmp[off + 2] / floatsize);
+                            Gizmos.color = new Color(vel.magnitude, vel.magnitude, vel.magnitude);
+                            Gizmos.DrawLine(originpos, originpos + vel);
+                        }
+                        
                         
                     }
                 }

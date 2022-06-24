@@ -1,0 +1,21 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+#include "UnityCG.cginc"
+CBUFFER_START(Params)
+float time;
+CBUFFER_END
+RWTexture3D<float4> Wind;
+Texture2D<float4> noise;
+SamplerState linearClampSampler;
+[numthreads(8, 8, 8)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+    float3 bias = noise.SampleLevel(linearClampSampler, float2(id.x / 256.0 + id.y / 16.0, id.z / 256.0 + id.y / 16.0), 0).xyz;
+    bias = (bias - float3(0.5, 0.5, 0.5))*0.05;
+    Wind[id.xyz] = float4(Wind[id.xyz].xyz + bias, 1.0);
+
+}
