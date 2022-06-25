@@ -39,6 +39,9 @@ public class WindController : MonoBehaviour
     public bool enabledebug;
     public int[] tmp;
     public int numtrees;
+    int numthreadsx = 8;
+    int numthreadsy = 8;
+    int numthreadsz = 8;
     private void OnButtonClicked()
     {
         Debug.Log("Clicked!");
@@ -56,7 +59,7 @@ public class WindController : MonoBehaviour
     void initcompute()
     {
         
-        
+
         step = false;
         windrt = creatert3d((int)size.x, (int)size.y, (int)size.z, RenderTextureFormat.ARGBFloat);
         
@@ -86,18 +89,18 @@ public class WindController : MonoBehaviour
         windinit.SetTexture(kernel, "Windix", windrtix);
         windinit.SetTexture(kernel, "Windiy", windrtiy);
         windinit.SetTexture(kernel, "Windiz", windrtiz);
-        windinit.SetInt("width", 16);
-        windinit.SetInt("height", 16);
-        windinit.SetInt("depth", 16);
-        windinit.Dispatch(kernel, 2, 2, 2);
+        windinit.SetInt("width", (int)size.x);
+        windinit.SetInt("height", (int)size.y);
+        windinit.SetInt("depth", (int)size.z);
+        windinit.Dispatch(kernel, (int)size.x/numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
 
 
         kernel = diffusion.FindKernel("CSMain");
         diffusion.SetTexture(kernel, "Wind", windrt);  
-        diffusion.SetInt( "width", 16);
-        diffusion.SetInt( "height", 16);
-        diffusion.SetInt("depth", 16);
+        diffusion.SetInt( "width", (int)size.x);
+        diffusion.SetInt( "height", (int)size.y);
+        diffusion.SetInt("depth", (int)size.z);
 
         //kernel = advectforward.FindKernel("CSMain");
         //advectforward.SetTexture(kernel, "Wind", windrt);
@@ -126,16 +129,16 @@ public class WindController : MonoBehaviour
         advectforward.SetTexture(kernel, "Windix", windrtix);
         advectforward.SetTexture(kernel, "Windiy", windrtiy);
         advectforward.SetTexture(kernel, "Windiz", windrtiz);
-        advectforward.SetInt("width", 16);
-        advectforward.SetInt("height", 16);
-        advectforward.SetInt("depth", 16);
+        advectforward.SetInt("width", (int)size.x);
+        advectforward.SetInt("height", (int)size.y);
+        advectforward.SetInt("depth", (int)size.z);
         advectforward.SetFloat("m_dt", m_dt);
 
         kernel = advectbackward.FindKernel("CSMain");
         advectbackward.SetTexture(kernel, "Wind", windrt);
-        advectbackward.SetInt("width", 16);
-        advectbackward.SetInt("height", 16);
-        advectbackward.SetInt("depth", 16);
+        advectbackward.SetInt("width", (int)size.x);
+        advectbackward.SetInt("height", (int)size.y);
+        advectbackward.SetInt("depth", (int)size.z);
         advectbackward.SetFloat("m_dt", m_dt);
 
         kernel = texitotex.FindKernel("CSMain");
@@ -143,17 +146,17 @@ public class WindController : MonoBehaviour
         texitotex.SetTexture(kernel, "Windix", windrtix);
         texitotex.SetTexture(kernel, "Windiy", windrtiy);
         texitotex.SetTexture(kernel, "Windiz", windrtiz);
-        texitotex.SetInt("width", 16);
-        texitotex.SetInt("height", 16);
-        texitotex.SetInt("depth", 16);
+        texitotex.SetInt("width", (int)size.x);
+        texitotex.SetInt("height", (int)size.y);
+        texitotex.SetInt("depth", (int)size.z);
         texitotex.SetFloat("m_dt", m_dt);
 
         kernel = textobuffer.FindKernel("CSMain");
         textobuffer.SetTexture(kernel, "src", windrt);
         textobuffer.SetBuffer(kernel, "dst", windbuffer);
-        textobuffer.SetInt("width", 16);
-        textobuffer.SetInt("height", 16);
-        textobuffer.SetInt("depth", 16);
+        textobuffer.SetInt("width", (int)size.x);
+        textobuffer.SetInt("height", (int)size.y);
+        textobuffer.SetInt("depth", (int)size.z);
         textobuffer.SetFloat("m_dt", m_dt);
 
         numtrees = 64;
@@ -183,18 +186,18 @@ public class WindController : MonoBehaviour
         obstacle.SetTexture(kernel, "Wind", windrt);
         obstacle.SetBuffer(kernel, "mincs", bbmin);
         obstacle.SetBuffer(kernel, "maxcs", bbmax);
-        obstacle.SetInt("width", 16);
-        obstacle.SetInt("height", 16);
-        obstacle.SetInt("depth", 16);
+        obstacle.SetInt("width", (int)size.x);
+        obstacle.SetInt("height", (int)size.y);
+        obstacle.SetInt("depth", (int)size.z);
         obstacle.SetFloat("m_dt", m_dt);
         obstacle.SetInt("n", numtrees);
 
         kernel = applynoise.FindKernel("CSMain");
         applynoise.SetTexture(kernel, "Wind", windrt);
         applynoise.SetTexture(kernel, "noise", noise);
-        applynoise.SetInt("width", 16);
-        applynoise.SetInt("height", 16);
-        applynoise.SetInt("depth", 16);
+        applynoise.SetInt("width", (int)size.x);
+        applynoise.SetInt("height", (int)size.y);
+        applynoise.SetInt("depth", (int)size.z);
         applynoise.SetFloat("m_dt", m_dt);
 
     }
@@ -224,15 +227,15 @@ public class WindController : MonoBehaviour
                 if(gen)
                 {
 
-                    windgen.Dispatch(kernel, 2, 2, 2);
+                    windgen.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
                     gen = false;
                 }
             }
             else
             {
 
-                windgen.Dispatch(kernel, 2, 2, 2);
-                
+                windgen.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
+
             }
             
             
@@ -245,28 +248,28 @@ public class WindController : MonoBehaviour
             kernel = diffusion.FindKernel("CSMain");
             for (int i = 0; i < 3; ++i)
             {
-                diffusion.Dispatch(kernel, 2, 2, 2);
+                diffusion.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
             }
 
             kernel = advectforward.FindKernel("CSMain");
-            advectforward.Dispatch(kernel, 2, 2, 2);
+            advectforward.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
             kernel = texitotex.FindKernel("CSMain");
-            texitotex.Dispatch(kernel, 2, 2, 2);
+            texitotex.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
 
 
             kernel = advectbackward.FindKernel("CSMain");
-            advectbackward.Dispatch(kernel, 2, 2, 2);
+            advectbackward.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
             kernel = obstacle.FindKernel("CSMain");
-            obstacle.Dispatch(kernel, 2, 2, 2);
+            obstacle.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
             kernel = applynoise.FindKernel("CSMain");
-            applynoise.Dispatch(kernel, 2, 2, 2);
+            applynoise.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
             kernel = textobuffer.FindKernel("CSMain");
-            textobuffer.Dispatch(kernel, 2, 2, 2);
+            textobuffer.Dispatch(kernel, (int)size.x / numthreadsx, (int)size.y / numthreadsy, (int)size.z / numthreadsz);
 
             windbuffer.GetData(tmp);
 
